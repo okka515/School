@@ -20,6 +20,7 @@ void error_message()
     fprintf(stderr, "   -h   : display this message\n");
 }
 
+/* 大文字を小文字に変換するメソッド */
 char big_to_small(char a)
 {
     if (a >= 'A' && a <= 'Z')
@@ -29,16 +30,19 @@ char big_to_small(char a)
     return a;
 }
 
+/* アルファベットを含むかどうかの判定 */
 bool contain_alpha(char *a)
 {
     while (*a != '\0')
     {
         if (isalpha(*a))
         {
+            
             return true;
         }
         a++;
     }
+    printf("アルファベットは含まれていないよ");
     return false;
 }
 
@@ -115,6 +119,7 @@ int main(int argc, char *argv[])
         {
             if (contain_alpha(buffer))
             {
+                printf("contain_alpha");
                 char *ptr = buffer;
                 char tmp[MAX_LEN];
                 int tmp_index = 0;
