@@ -20,6 +20,7 @@ void error_message()
     fprintf(stderr, "   -h   : display this message\n");
 }
 
+/* アルファベットを大文字から小文字にするメソッド */
 char big_to_small(char a)
 {
     if (a >= 'A' && a <= 'Z')
@@ -29,15 +30,17 @@ char big_to_small(char a)
     return a;
 }
 
+/* アルファベットを含んでいるかの判定メソッド */
 bool contain_alpha(char *a)
 {
-    while (*a != '\0')
+    char *p = a;
+    while (*p != '\0')
     {
-        if (isalpha(*a))
+        if (isalpha(*p))
         {
             return true;
         }
-        a++;
+        p++;
     }
     return false;
 }
@@ -49,13 +52,14 @@ int main(int argc, char *argv[])
     char buffer[MAX_LEN];
     bool is_p = false; // pコマンドオプションをブール管理
 
-    // コマンドライン引数の解析
+    // コマンドライン引数の文字数解析
     if (argc < 3)
     {
         error_message();
         return 1;
     }
 
+    // コマンドラインの解析
     for (int i = 1; i < argc; i++)
     {
         if (argv[i][0] == '-') // オプションかどうかの判定
@@ -66,7 +70,7 @@ int main(int argc, char *argv[])
                 error_message();
                 return 0;
             case 'p': // パススルーモード
-                is_p = true; //pが真
+                is_p = true;
                 break;
             default: //用意していないコマンドラインオプションの場合
                 fprintf(stderr, "Unknown option: %s\n", argv[i]);
@@ -106,46 +110,49 @@ int main(int argc, char *argv[])
     //入力ファイルの処理
     while (fgets(buffer, sizeof(buffer), input_file))
     {
-        /*pコマンドオプションが真のため通常課題1通りの処理*/
-        if (is_p)
+        char *ptr = buffer;
+        char tmp[MAX_LEN];
+        int tmp_index = 0;
+
+        while (*ptr != '\0')
         {
-            fputs(buffer, output_file);
-        }
-        else //pコマンドが偽のため通常課題2通りの処理
-        {
-            if (contain_alpha(buffer))
+            if (isspace(*ptr)) // タブまたは空白の検出
             {
-                char *ptr = buffer;
-                char tmp[MAX_LEN];
-                int tmp_index = 0;
-
-                while (*ptr != '\0')
+                if (tmp_index > 0) // 単語が存在する場合
                 {
-                    if (isspace(*ptr)) //タブまたは空白の検出
+                    tmp[tmp_index] = '\0'; // 文字列を終了
+                    if (contain_alpha(tmp)) // アルファベットが含まれる場合のみ出力
                     {
-                        if (tmp_index > 0) //改行のみの行をスキップ
+                        for (int i = 0; i < tmp_index; i++)
                         {
-                            tmp[tmp_index] = '\0';
-                            fprintf(output_file, "%s\n", tmp);
-                            tmp_index = 0;
+                            tmp[i] = big_to_small(tmp[i]); // 小文字に変換
                         }
+                        fprintf(output_file, "%s\n", tmp); // 出力
                     }
-                    else
-                    {
-                        char big_small_tmp = big_to_small(*ptr);
-                        tmp[tmp_index++] = big_small_tmp;
-                    }
-                    ptr++;
+                    tmp_index = 0; // 次の単語処理のためにリセット
                 }
+            }
+            else // タブまたは空白でない場合
+            {
+                tmp[tmp_index++] = *ptr;
+            }
+            ptr++;
+        }
 
-                if (tmp_index > 0)
+        if (tmp_index > 0) // 最後の単語を処理
+        {
+            tmp[tmp_index] = '\0';
+            if (contain_alpha(tmp))
+            {
+                for (int i = 0; i < tmp_index; i++)
                 {
-                    tmp[tmp_index] = '\0';
-                    fprintf(output_file, "%s\n", tmp);
-                }   
+                    tmp[i] = big_to_small(tmp[i]);
+                }
+                fprintf(output_file, "%s\n", tmp);
             }
         }
     }
+
 
     // ファイルを閉じる
     fclose(input_file);

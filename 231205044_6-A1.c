@@ -78,10 +78,10 @@ int main(int argc, char *argv[])
         }
         else //通常課題2通りの処理
         {
+            printf("あああ");
             char *ptr = buffer;
             char tmp[MAX_LEN];
             int tmp_index = 0;
-
             while (*ptr != '\0')
             {
                 if (isspace(*ptr))
