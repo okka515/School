@@ -9,14 +9,14 @@
 #include <ctype.h>
 #include <stdbool.h>
 #include <string.h>
-#include "./7th/hash.h"
+#include "./7th/hash.c"
 
 #define MAX_LEN 1024
 
 // エラーメッセージ出力関数
 void error_message()
 {
-    fprintf(stderr, "usage: 231205044_6-3 [options...] <input file> <output file>\n");
+    fprintf(stderr, "usage: 231205044_7-3 [options...] <input file> <output file>\n");
     fprintf(stderr, "options:\n");
     fprintf(stderr, "   -p   : enable pass-through mode\n");
     fprintf(stderr, "   -h   : display this message\n");
@@ -32,6 +32,7 @@ char big_to_small(char a)
     return a;
 }
 
+/* 最初と最後の記号と所有格を取り除くメソッド */
 void remove_symbol_start_and_end_and_prossessive(char *a)
 {
     char *start = a;
@@ -80,6 +81,72 @@ bool contain_alpha(char *a)
         p++;
     }
     return false;
+}
+
+// 単語の回数をハッシュで記録して，出力する関数
+HashTablePtr count_words(FILE *in, FILE *out, bool mode)
+{
+    int c, value;
+    char buf[MAX_LEN];
+    HashTablePtr t = NULL;
+
+    if (!mode) t = create_hashtable();
+
+    while (fgets(buf, sizeof(buf), in) != NULL)
+    {
+        if (mode) fputs(buf, out);
+        else
+        {
+            char *ptr = buf;
+            char word[MAX_LEN];
+            int tmp_index = 0;
+
+            while (*ptr != '\0')
+            {
+                if (isspace(*ptr)) //タブまたは空白の検出
+                {
+                    if (tmp_index > 0) //単語が存在する場合
+                    {
+                        word[tmp_index] = '\0'; //文字列を終了
+                        remove_symbol_start_and_end_and_prossessive(word);
+                        if (contain_alpha(word))
+                        {
+                            for (int i = 0; i < tmp_index; i++)
+                            {
+                                word[i] = big_to_small(word[i]);
+                            }
+
+                            /* ハッシュのkeyから単語を走査し，値を得る*/
+                            c = lookup(t, word);
+                            value = (c < 0) ? 1 : c + 1; // lookup関数の返り値は，keyが見つからなった場合-1なのでc < 0で比較
+                            enter(t, word, value);
+                            fprintf(out, "%s: %d\n", word, value);
+
+                        }
+                        tmp_index = 0; // 次の単語のためのリセット処理
+                    }
+                }
+                else //タブまたは空白の検出がない場合，次の文字に進む
+                {
+                    word[tmp_index++] = *ptr;
+                }
+                ptr++;
+            }
+            if (tmp_index > 0)
+            {
+                word[tmp_index] = '\0';
+                if (contain_alpha(word))
+                {
+                    for(int i = 0; i < tmp_index; i++)
+                    {
+                        word[i] = big_to_small(word[i]);
+                    }
+                    fprintf(out, "%s: %d\n", word);
+                }
+            }
+        }
+    } 
+    return t;
 }
 
 int main(int argc, char *argv[])
@@ -145,53 +212,8 @@ int main(int argc, char *argv[])
     }
     
     //入力ファイルの処理
-    while (fgets(buffer, sizeof(buffer), input_file))
-    {
-        char *ptr = buffer;
-        char tmp[MAX_LEN];
-        int tmp_index = 0;
-
-        while (*ptr != '\0')
-        {
-            if (isspace(*ptr)) // タブまたは空白の検出
-            {
-                if (tmp_index > 0) // 単語が存在する場合
-                {
-                    tmp[tmp_index] = '\0'; // 文字列を終了
-                    remove_symbol_start_and_end_and_prossessive(tmp);
-                    if (contain_alpha(tmp)) // アルファベットが含まれる場合のみ出力
-                    {
-                        for (int i = 0; i < tmp_index; i++)
-                        {
-                            tmp[i] = big_to_small(tmp[i]); // 小文字に変換
-                        }
-                        fprintf(output_file, "%s\n", tmp); // 出力
-                    }
-                    tmp_index = 0; // 次の単語処理のためにリセット
-                }
-            }
-            else // タブまたは空白でない場合
-            {
-                tmp[tmp_index++] = *ptr;
-            }
-            ptr++;
-        }
-
-        if (tmp_index > 0) // 最後の単語を処理
-        {
-            tmp[tmp_index] = '\0';
-            if (contain_alpha(tmp))
-            {
-                for (int i = 0; i < tmp_index; i++)
-                {
-                    tmp[i] = big_to_small(tmp[i]);
-                }
-                fprintf(output_file, "%s\n", tmp);
-            }
-        }
-    }
-
-
+    HashTablePtr t = count_words(input_file, output_file, is_p);
+    delete_hashtable(t); // ハッシュテーブルのメモリ解放
     // ファイルを閉じる
     fclose(input_file);
     fclose(output_file);
