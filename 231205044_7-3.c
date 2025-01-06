@@ -132,18 +132,6 @@ HashTablePtr count_words(FILE *in, FILE *out, bool mode)
                 }
                 ptr++;
             }
-            if (tmp_index > 0)
-            {
-                word[tmp_index] = '\0';
-                if (contain_alpha(word))
-                {
-                    for(int i = 0; i < tmp_index; i++)
-                    {
-                        word[i] = big_to_small(word[i]);
-                    }
-                    fprintf(out, "%s: %d\n", word);
-                }
-            }
         }
     } 
     return t;

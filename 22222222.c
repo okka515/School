@@ -8,7 +8,6 @@
 #include <stdlib.h>
 #include <ctype.h>
 #include <stdbool.h>
-#include <string.h>
 
 #define MAX_LEN 1024
 
@@ -30,41 +29,6 @@ char big_to_small(char a)
     }
     return a;
 }
-
-void remove_symbol_start_and_end_and_prossessive(char *a)
-{
-    char *start = a;
-    char *end = a + strlen(a) - 1;
-
-    // 先頭の記号を削除
-    while (*start && !isalpha(*start)) 
-    {
-        start++;
-    }
-
-    // 末尾の記号を削除
-    while (end > start && !isalpha(*end)) 
-    {
-        *end-- = '\0';
-    }
-
-    // 所有格を削除
-    if (end > start && end[-1] == '\'' && end[0] == 's') 
-    {
-        end[-1] = '\0';
-    }
-
-    // 開始位置を調整した文字列を元の配列にコピー
-    if (*start == '\0') 
-    {
-        a[0] = '\0'; // 完全に削除された場合
-    } 
-    else 
-    {
-        memmove(a, start, strlen(start) + 1);
-    }
-}
-
 
 /* アルファベットを含んでいるかの判定メソッド */
 bool contain_alpha(char *a)
@@ -146,40 +110,50 @@ int main(int argc, char *argv[])
     //入力ファイルの処理
     while (fgets(buffer, sizeof(buffer), input_file))
     {
-        if (is_p) fputs(buffer, output_file);
-        else
-        {
-            char *ptr = buffer;
-            char tmp[MAX_LEN];
-            int tmp_index = 0;
+        char *ptr = buffer;
+        char tmp[MAX_LEN];
+        int tmp_index = 0;
 
-            while (*ptr != '\0')
+        while (*ptr != '\0')
+        {
+            if (isspace(*ptr)) // タブまたは空白の検出
             {
-                if (isspace(*ptr)) // タブまたは空白の検出
+                if (tmp_index > 0) // 単語が存在する場合
                 {
-                    if (tmp_index > 0) // 単語が存在する場合
+                    tmp[tmp_index] = '\0'; // 文字列を終了
+                    if (contain_alpha(tmp)) // アルファベットが含まれる場合のみ出力
                     {
-                        tmp[tmp_index] = '\0'; // 文字列を終了
-                        remove_symbol_start_and_end_and_prossessive(tmp);
-                        if (contain_alpha(tmp)) // アルファベットが含まれる場合のみ出力
+                        for (int i = 0; i < tmp_index; i++)
                         {
-                            for (int i = 0; i < tmp_index; i++)
-                            {
-                                tmp[i] = big_to_small(tmp[i]); // 小文字に変換
-                            }
-                            fprintf(output_file, "%s\n", tmp); // 出力
+                            tmp[i] = big_to_small(tmp[i]); // 小文字に変換
                         }
-                        tmp_index = 0; // 次の単語処理のためにリセット
+                        fprintf(output_file, "%s\n", tmp); // 出力
                     }
+                    tmp_index = 0; // 次の単語処理のためにリセット
                 }
-                else // タブまたは空白でない場合
+            }
+            else // タブまたは空白でない場合
+            {
+                tmp[tmp_index++] = *ptr;
+            }
+            ptr++;
+        }
+
+        if (tmp_index > 0) // 最後の単語を処理
+        {
+            tmp[tmp_index] = '\0';
+            if (contain_alpha(tmp))
+            {
+                for (int i = 0; i < tmp_index; i++)
                 {
-                    tmp[tmp_index++] = *ptr;
+                    tmp[i] = big_to_small(tmp[i]);
                 }
-                ptr++;
+                fprintf(output_file, "%s\n", tmp);
             }
         }
     }
+
+
     // ファイルを閉じる
     fclose(input_file);
     fclose(output_file);

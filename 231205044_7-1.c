@@ -14,7 +14,7 @@
 // エラーメッセージ出力関数
 void error_message()
 {
-    fprintf(stderr, "usage: 231205044_6-3 [options...] <input file> <output file>\n");
+    fprintf(stderr, "usage: 231205044_7-1 [options...] <input file> <output file>\n");
     fprintf(stderr, "options:\n");
     fprintf(stderr, "   -p   : enable pass-through mode\n");
     fprintf(stderr, "   -h   : display this message\n");
@@ -138,21 +138,7 @@ int main(int argc, char *argv[])
             }
             ptr++;
         }
-
-        if (tmp_index > 0) // 最後の単語を処理
-        {
-            tmp[tmp_index] = '\0';
-            if (contain_alpha(tmp))
-            {
-                for (int i = 0; i < tmp_index; i++)
-                {
-                    tmp[i] = big_to_small(tmp[i]);
-                }
-                fprintf(output_file, "%s\n", tmp);
-            }
-        }
     }
-
 
     // ファイルを閉じる
     fclose(input_file);
